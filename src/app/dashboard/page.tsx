@@ -23,6 +23,7 @@ const NASLEDNJA_LIGA: Record<string, string> = {
 export default function Dashboard() {
   const [profil, setProfil] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [novaPovabila, setNovaPovabila] = useState(0)
   const router = useRouter()
   const supabase = createClient()
 
@@ -33,6 +34,15 @@ export default function Dashboard() {
       const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       if (!data) { router.push('/onboarding'); return }
       setProfil(data)
+
+      // Preveri nova povabila
+      const { count } = await supabase
+        .from('povabila')
+        .select('*', { count: 'exact', head: true })
+        .eq('povabljenec_id', user.id)
+        .eq('status', 'caka')
+      setNovaPovabila(count || 0)
+
       setLoading(false)
     }
     nalozi()
@@ -90,10 +100,21 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <Link href="/iskanje-tekme"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-              🔍 Išči Tekmo
-            </Link>
+            <div className="flex gap-3">
+              <Link href="/iskanje-tekme"
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                🔍 Išči Tekmo
+              </Link>
+              <Link href="/povabila"
+                className="relative inline-flex items-center gap-2 border border-blue-700 hover:border-blue-500 px-6 py-3 rounded-xl font-bold transition-all">
+                📬 Povabila
+                {novaPovabila > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">
+                    {novaPovabila}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
 
           {/* Statistike */}
@@ -117,18 +138,24 @@ export default function Dashboard() {
         </div>
 
         {/* Navigacija */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
             {href:'/iskanje-tekme', icon:'🔍', title:'Išči Tekmo', opis:'Najdi nasprotnika'},
+            {href:'/povabila', icon:'📬', title:'Povabila', opis:'Sprejmi izzive'},
             {href:'/lestvica', icon:'🏆', title:'Lestvica', opis:'Poglej rang listo'},
             {href:'/tekma', icon:'⚔️', title:'Začni Tekmo', opis:'Vnesi rezultat'},
             {href:'/igrisca', icon:'📍', title:'Igrišča', opis:'Padel centri v SLO'},
           ].map(({href, icon, title, opis}) => (
             <Link key={href} href={href}
-              className="bg-[#051525] border border-blue-800/30 hover:border-blue-600/50 rounded-2xl p-6 text-center transition-all hover:bg-blue-900/20 group">
+              className="relative bg-[#051525] border border-blue-800/30 hover:border-blue-600/50 rounded-2xl p-6 text-center transition-all hover:bg-blue-900/20 group">
               <div className="text-3xl mb-3">{icon}</div>
               <div className="font-bold text-white group-hover:text-blue-300 transition-colors">{title}</div>
               <div className="text-blue-400/60 text-xs mt-1">{opis}</div>
+              {href === '/povabila' && novaPovabila > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">
+                  {novaPovabila}
+                </span>
+              )}
             </Link>
           ))}
         </div>
