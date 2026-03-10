@@ -24,7 +24,7 @@ export default function Register() {
       email,
       password: geslo,
       options: {
-        emailRedirectTo: 'http://localhost:3000/onboarding',
+        emailRedirectTo: 'https://padel-liga-bay.vercel.app/onboarding',
       }
     })
 
