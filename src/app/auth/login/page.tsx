@@ -17,7 +17,7 @@ export default function Login() {
     setLoading(true)
     setNapaka('')
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password: geslo,
     })
@@ -27,6 +27,22 @@ export default function Login() {
       setLoading(false)
       return
     }
+
+    // Pošlji mail ob prijavi
+    const { data: profil } = await supabase
+      .from('profiles')
+      .select('ime')
+      .eq('id', data.user.id)
+      .single()
+
+    await fetch('/api/prijava-mail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        ime: profil?.ime || 'Igralec'
+      })
+    })
 
     router.push('/dashboard')
   }
@@ -95,6 +111,11 @@ export default function Login() {
             <span className="text-blue-400/40 text-sm">Nimaš računa? </span>
             <Link href="/auth/register" className="text-blue-400 hover:text-blue-300 text-sm font-bold transition-colors">
               Registracija →
+            </Link>
+          </div>
+          <div className="text-center mt-3">
+            <Link href="/auth/reset-geslo" className="text-blue-400/50 hover:text-blue-300 text-sm transition-colors">
+              Pozabljeno geslo?
             </Link>
           </div>
         </div>
