@@ -91,7 +91,6 @@ export default function Povabila() {
       set3moj && set3nas ? (parseInt(jePovabitelj ? set3moj : set3nas) > parseInt(jePovabitelj ? set3nas : set3moj) ? 1 : 0) : 0,
     ].reduce((a, b) => a + b, 0)
     const nasSeti = (set3moj && set3nas ? 3 : 2) - mojeSete
-
     const rezultat = `${set1moj}-${set1nas}, ${set2moj}-${set2nas}${set3moj ? `, ${set3moj}-${set3nas}` : ''}`
     const zmaga = mojeSete > nasSeti
 
@@ -101,22 +100,101 @@ export default function Povabila() {
 
     await supabase.from('povabila').update(updateData).eq('id', povabilo.id)
 
-    // Preveri če oba potrdila
     const { data: posodobljeno } = await supabase.from('povabila').select('*').eq('id', povabilo.id).single()
 
     if (posodobljeno?.potrjeno_povabitelj && posodobljeno?.potrjeno_povabljenec) {
-      // Oba sta potrdila – zaključi tekmo
       const zmagovalecId = zmaga ? profil.id : (jePovabitelj ? povabilo.povabljenec_id : povabilo.povabitelj_id)
-      await supabase.from('povabila').update({ status: 'koncano', zmagovalec_id: zmagovalecId }).eq('id', povabilo.id)
+
+      await supabase.from('povabila').update({
+        status: 'koncano',
+        zmagovalec_id: zmagovalecId
+      }).eq('id', povabilo.id)
 
       // Posodobi statistiko
-      await supabase.from('profiles').update({ zmage: profil.zmage + (zmaga ? 1 : 0), porazi: profil.porazi + (zmaga ? 0 : 1) }).eq('id', profil.id)
+      const novoZmage = profil.zmage + (zmaga ? 1 : 0)
+      const novoPorazi = profil.porazi + (zmaga ? 0 : 1)
+
+      // Preveri napredovanje v ligo
+      const LIGA_ZMAGE: Record<string, number> = {
+        starter: 5, challenger: 8, competitor: 10, pro: 12
+      }
+      const NASLEDNJA_LIGA: Record<string, string> = {
+        starter: 'challenger', challenger: 'competitor', competitor: 'pro', pro: 'elite'
+      }
+      let novaLiga = profil.liga
+      const potrebno = LIGA_ZMAGE[profil.liga]
+      if (potrebno && novoZmage >= potrebno && NASLEDNJA_LIGA[profil.liga]) {
+        novaLiga = NASLEDNJA_LIGA[profil.liga]
+      }
+
+      await supabase.from('profiles').update({
+        zmage: novoZmage,
+        porazi: novoPorazi,
+        liga: novaLiga,
+      }).eq('id', profil.id)
 
       const nasprotnik = jePovabitelj ? povabilo.povabljenec : povabilo.povabitelj
       await supabase.from('profiles').update({
         zmage: nasprotnik.zmage + (zmaga ? 0 : 1),
         porazi: nasprotnik.porazi + (zmaga ? 1 : 0)
       }).eq('id', nasprotnik.id)
+
+      // Preveri značke
+      // Prva tekma
+      if (profil.zmage + profil.porazi === 0) {
+        await fetch('/api/dodaj-znacko', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ igralecId: profil.id, tip: 'prva_tekma' })
+        })
+      }
+
+      // Prva zmaga
+      if (zmaga && profil.zmage === 0) {
+        await fetch('/api/dodaj-znacko', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ igralecId: profil.id, tip: 'prva_zmaga' })
+        })
+      }
+
+      // 5 zmag zapored
+      if (zmaga) {
+        const { data: zadnjeTekme } = await supabase
+          .from('povabila')
+          .select('zmagovalec_id')
+          .or(`povabitelj_id.eq.${profil.id},povabljenec_id.eq.${profil.id}`)
+          .eq('status', 'koncano')
+          .order('created_at', { ascending: false })
+          .limit(4)
+
+        const vsaZmage = zadnjeTekme?.every(t => t.zmagovalec_id === profil.id)
+        if (vsaZmage && (zadnjeTekme?.length || 0) >= 4) {
+          await fetch('/api/dodaj-znacko', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ igralecId: profil.id, tip: 'pet_zmag_zapored' })
+          })
+        }
+      }
+
+      // Napredovanje
+      if (novaLiga !== profil.liga) {
+        await fetch('/api/dodaj-znacko', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ igralecId: profil.id, tip: 'napredovanje' })
+        })
+      }
+
+      // Elite liga
+      if (novaLiga === 'elite') {
+        await fetch('/api/dodaj-znacko', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ igralecId: profil.id, tip: 'elite_liga' })
+        })
+      }
 
       // Pošlji email obema
       await fetch('/api/potrdi-rezultat', {
