@@ -32,6 +32,7 @@ export default function Profil() {
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(true)
   const [shranjujem, setShranjujem] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [zavihek, setZavihek] = useState<'profil' | 'ekipa'>('profil')
   const [znacke, setZnacke] = useState<any[]>([])
   const [ekipaNaziv, setEkipaNaziv] = useState('')
@@ -77,6 +78,29 @@ export default function Profil() {
     setProfil({ ...profil, ime, priimek, username })
     setUrejam(false)
     setShranjujem(false)
+  }
+
+  const uploadAvatar = async (file: File) => {
+    if (!file) return
+    setUploadingAvatar(true)
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const fileExt = file.name.split('.').pop()
+    const filePath = `${user.id}/avatar.${fileExt}`
+
+    await supabase.storage.from('avatarji').remove([`${user.id}/avatar.jpg`, `${user.id}/avatar.png`, `${user.id}/avatar.jpeg`, `${user.id}/avatar.webp`])
+
+    const { error } = await supabase.storage.from('avatarji').upload(filePath, file, { upsert: true })
+
+    if (!error) {
+      const { data: { publicUrl } } = supabase.storage.from('avatarji').getPublicUrl(filePath)
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
+      setProfil({ ...profil, avatar_url: publicUrl })
+    }
+
+    setUploadingAvatar(false)
   }
 
   const ustvariEkipo = async () => {
@@ -140,8 +164,27 @@ export default function Profil() {
           
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             {/* Avatar */}
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-600/30 to-blue-900/50 border-2 border-blue-500/40 flex items-center justify-center text-4xl font-black text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-              {profil.ime?.[0]}{profil.priimek?.[0]}
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-2xl border-2 border-blue-500/40 overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                {profil.avatar_url ? (
+                  <img src={profil.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-600/30 to-blue-900/50 flex items-center justify-center text-4xl font-black text-blue-300">
+                    {profil.ime?.[0]}{profil.priimek?.[0]}
+                  </div>
+                )}
+              </div>
+              <label className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-all cursor-pointer flex items-center justify-center">
+                <span className="text-white text-xs font-bold">
+                  {uploadingAvatar ? '⏳' : '📸'}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => e.target.files?.[0] && uploadAvatar(e.target.files[0])}
+                />
+              </label>
             </div>
 
             <div className="flex-1">
