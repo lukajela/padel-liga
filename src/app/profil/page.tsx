@@ -33,6 +33,7 @@ export default function Profil() {
   const [loading, setLoading] = useState(true)
   const [shranjujem, setShranjujem] = useState(false)
   const [zavihek, setZavihek] = useState<'profil' | 'ekipa'>('profil')
+  const [znacke, setZnacke] = useState<any[]>([])
   const [ekipaNaziv, setEkipaNaziv] = useState('')
   const [partnerEmail, setPartnerEmail] = useState('')
   const [mojaEkipa, setMojaEkipa] = useState<any>(null)
@@ -57,6 +58,13 @@ export default function Profil() {
         .or(`igralec1_id.eq.${user.id},igralec2_id.eq.${user.id}`)
         .single()
       if (ekipa) setMojaEkipa(ekipa)
+
+      const { data: zn } = await supabase
+        .from('znacke')
+        .select('*')
+        .eq('igralec_id', user.id)
+        .order('created_at', { ascending: true })
+      setZnacke(zn || [])
       setLoading(false)
     }
     nalozi()
@@ -247,6 +255,43 @@ export default function Profil() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Značke */}
+        {zavihek === 'profil' && (
+          <div className="bg-[#051525] border border-blue-800/30 rounded-2xl p-6 mt-4">
+            <h3 className="font-black text-lg mb-4">🏅 Moje značke</h3>
+            {znacke.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="text-4xl mb-2">🎯</div>
+                <p className="text-blue-400/30 text-sm">Še nimaš značk – začni igrati!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {znacke.map(z => {
+                  const ZNACKE_INFO: Record<string, {emoji: string, ime: string, opis: string}> = {
+                    prva_tekma: { emoji: '🎾', ime: 'Prva tekma', opis: 'Odigral si svojo prvo tekmo!' },
+                    prva_zmaga: { emoji: '🏆', ime: 'Prva zmaga', opis: 'Zmagal si svojo prvo tekmo!' },
+                    pet_zmag_zapored: { emoji: '🔥', ime: '5 zmag zapored', opis: 'Zmagal si 5 tekem zapored!' },
+                    napredovanje: { emoji: '⚡', ime: 'Napredovanje', opis: 'Napredoval si v višjo ligo!' },
+                    elite_liga: { emoji: '👑', ime: 'Elite liga', opis: 'Dosegel si Elite ligo!' },
+                    turnirski_zmagovalec: { emoji: '🏅', ime: 'Turnirski zmagovalec', opis: 'Zmagal si turnir!' },
+                  }
+                  const info = ZNACKE_INFO[z.tip]
+                  return (
+                    <div key={z.id} className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4 text-center">
+                      <div className="text-3xl mb-2">{info?.emoji}</div>
+                      <div className="font-bold text-sm text-purple-300">{info?.ime}</div>
+                      <div className="text-purple-400/50 text-xs mt-1">{info?.opis}</div>
+                      <div className="text-purple-400/30 text-xs mt-2">
+                        {new Date(z.created_at).toLocaleDateString('sl-SI')}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
 

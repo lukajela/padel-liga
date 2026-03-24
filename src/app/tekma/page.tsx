@@ -45,11 +45,9 @@ export default function Tekma() {
 
     const { zmaga, mojeSete, nasSete } = izracunajZmagovalca()
 
-    // Posodobi statistiko
     const novoZmage = zmaga ? (profil.zmage + 1) : profil.zmage
     const novoPorazi = !zmaga ? (profil.porazi + 1) : profil.porazi
 
-    // Preveri napredovanje v ligo
     const LIGA_ZMAGE: Record<string, number> = {
       starter: 5, challenger: 8, competitor: 10, pro: 12
     }
@@ -69,7 +67,71 @@ export default function Tekma() {
       liga: novaLiga,
     }).eq('id', user.id)
 
-    setShranjeno({ zmaga, mojeSete, nasSete, novaLiga, napredoval: novaLiga !== profil.liga })
+    // Preveri značke
+    const novaZnacka: string[] = []
+
+    // Prva tekma
+    if (profil.zmage + profil.porazi === 0) {
+      await fetch('/api/dodaj-znacko', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ igralecId: user.id, tip: 'prva_tekma' })
+      })
+      novaZnacka.push('🎾 Prva tekma')
+    }
+
+    // Prva zmaga
+    if (zmaga && profil.zmage === 0) {
+      await fetch('/api/dodaj-znacko', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ igralecId: user.id, tip: 'prva_zmaga' })
+      })
+      novaZnacka.push('🏆 Prva zmaga')
+    }
+
+    // 5 zmag zapored - preveri zadnjih 5 tekem
+    if (zmaga) {
+      const { data: zadnjeTekme } = await supabase
+        .from('povabila')
+        .select('zmagovalec_id')
+        .or(`povabitelj_id.eq.${user.id},povabljenec_id.eq.${user.id}`)
+        .eq('status', 'koncano')
+        .order('created_at', { ascending: false })
+        .limit(4)
+
+      const vsaZmage = zadnjeTekme?.every(t => t.zmagovalec_id === user.id)
+      if (vsaZmage && (zadnjeTekme?.length || 0) >= 4) {
+        await fetch('/api/dodaj-znacko', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ igralecId: user.id, tip: 'pet_zmag_zapored' })
+        })
+        novaZnacka.push('🔥 5 zmag zapored')
+      }
+    }
+
+    // Napredovanje v ligo
+    if (novaLiga !== profil.liga) {
+      await fetch('/api/dodaj-znacko', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ igralecId: user.id, tip: 'napredovanje' })
+      })
+      novaZnacka.push('⚡ Napredovanje')
+    }
+
+    // Elite liga
+    if (novaLiga === 'elite') {
+      await fetch('/api/dodaj-znacko', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ igralecId: user.id, tip: 'elite_liga' })
+      })
+      novaZnacka.push('👑 Elite liga')
+    }
+
+    setShranjeno({ zmaga, mojeSete, nasSete, novaLiga, napredoval: novaLiga !== profil.liga, novaZnacka })
     setKorak('rezultat')
     setLoading(false)
   }
@@ -247,6 +309,23 @@ export default function Tekma() {
                 <div className="text-yellow-400 font-black text-xl">NAPREDOVAL SI!</div>
                 <div className="text-yellow-300/70 mt-1 capitalize">
                   Dobrodošel v <strong>{shranjeno.novaLiga} Ligi</strong>!
+                </div>
+              </div>
+            )}
+
+            {/* Nove značke */}
+            {shranjeno.novaZnacka?.length > 0 && (
+              <div className="bg-purple-900/20 border border-purple-500/30 rounded-2xl p-6 mb-6">
+                <div className="text-center mb-3">
+                  <div className="text-3xl mb-1">🏅</div>
+                  <div className="text-purple-400 font-black">Nova značka!</div>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {shranjeno.novaZnacka.map((z: string) => (
+                    <span key={z} className="bg-purple-900/30 border border-purple-500/30 text-purple-300 px-3 py-1 rounded-full text-sm font-bold">
+                      {z}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
