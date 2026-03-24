@@ -34,6 +34,13 @@ export default function Register() {
       return
     }
 
+    // Pošlji dobrodošlica mail
+    await fetch('/api/dobrodosli-mail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+
     router.push('/onboarding')
   }
 
