@@ -33,6 +33,13 @@ export default function Profil() {
   const [loading, setLoading] = useState(true)
   const [shranjujem, setShranjujem] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [spreminjamGeslo, setSpreminjaмGeslo] = useState(false)
+  const [staroGeslo, setStaroGeslo] = useState('')
+  const [novoGeslo, setNovoGeslo] = useState('')
+  const [novoGeslo2, setNovoGeslo2] = useState('')
+  const [gesloNapaka, setGesloNapaka] = useState('')
+  const [gesloUspesno, setGesloUspesno] = useState(false)
+  const [shranjujemGeslo, setShranjujemGeslo] = useState(false)
   const [zavihek, setZavihek] = useState<'profil' | 'ekipa'>('profil')
   const [znacke, setZnacke] = useState<any[]>([])
   const [ekipaNaziv, setEkipaNaziv] = useState('')
@@ -103,6 +110,29 @@ export default function Profil() {
     }
 
     setUploadingAvatar(false)
+  }
+
+  const spremeniGeslo = async () => {
+    if (!novoGeslo || !novoGeslo2) return
+    if (novoGeslo !== novoGeslo2) { setGesloNapaka('Gesli se ne ujemata.'); return }
+    if (novoGeslo.length < 6) { setGesloNapaka('Geslo mora biti vsaj 6 znakov.'); return }
+    setShranjujemGeslo(true)
+    setGesloNapaka('')
+
+    const { error } = await supabase.auth.updateUser({ password: novoGeslo })
+
+    if (error) {
+      setGesloNapaka('Napaka pri spremembi gesla.')
+      setShranjujemGeslo(false)
+      return
+    }
+
+    setGesloUspesno(true)
+    setSpreminjaмGeslo(false)
+    setNovoGeslo('')
+    setNovoGeslo2('')
+    setShranjujemGeslo(false)
+    setTimeout(() => setGesloUspesno(false), 3000)
   }
 
   const ustvariEkipo = async () => {
@@ -304,6 +334,61 @@ export default function Profil() {
         )}
 
         {/* Značke */}
+        {/* Sprememba gesla */}
+        {zavihek === 'profil' && (
+          <div className="bg-[#051525] border border-blue-800/30 rounded-2xl p-6 mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-black text-lg">🔐 Geslo</h3>
+              <button onClick={() => setSpreminjaмGeslo(!spreminjamGeslo)}
+                className="border border-blue-700/50 hover:border-blue-500 text-blue-300 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                {spreminjamGeslo ? 'Prekliči' : '🔑 Spremeni geslo'}
+              </button>
+            </div>
+
+            {gesloUspesno && (
+              <div className="bg-green-900/20 border border-green-500/30 rounded-xl px-4 py-3 mb-4 text-green-400 text-sm font-bold">
+                ✅ Geslo uspešno spremenjeno!
+              </div>
+            )}
+
+            {spreminjamGeslo && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-blue-400/60 text-xs uppercase tracking-wider mb-2 block font-bold">Novo geslo</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={novoGeslo}
+                    onChange={e => setNovoGeslo(e.target.value)}
+                    className="w-full bg-blue-950/40 border border-blue-700/30 focus:border-blue-400 rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-blue-400/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-blue-400/60 text-xs uppercase tracking-wider mb-2 block font-bold">Potrdi novo geslo</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={novoGeslo2}
+                    onChange={e => setNovoGeslo2(e.target.value)}
+                    className="w-full bg-blue-950/40 border border-blue-700/30 focus:border-blue-400 rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-blue-400/30"
+                  />
+                </div>
+
+                {gesloNapaka && (
+                  <div className="bg-red-900/20 border border-red-500/30 rounded-xl px-4 py-3 text-red-400 text-sm">
+                    ⚠️ {gesloNapaka}
+                  </div>
+                )}
+
+                <button onClick={spremeniGeslo} disabled={!novoGeslo || !novoGeslo2 || shranjujemGeslo}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 rounded-xl font-black transition-all disabled:opacity-30">
+                  {shranjujemGeslo ? '⏳ Shranjujem...' : '🔐 Shrani novo geslo'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {zavihek === 'profil' && (
           <div className="bg-[#051525] border border-blue-800/30 rounded-2xl p-6 mt-4">
             <h3 className="font-black text-lg mb-4">🏅 Moje značke</h3>

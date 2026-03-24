@@ -52,7 +52,6 @@ export default function TurnirDetajl() {
   const zacniTurnir = async () => {
     if (prijave.length < 2) return
 
-    // Premešaj prijavljene
     const premesani = [...prijave].sort(() => Math.random() - 0.5)
     const tekmeZaVstaviti = []
 
@@ -71,6 +70,19 @@ export default function TurnirDetajl() {
 
     await supabase.from('turnir_tekme').insert(tekmeZaVstaviti)
     await supabase.from('turnirji').update({ status: 'aktiven' }).eq('id', params.id)
+
+    // Pošlji email vsem prijavljenim
+    await fetch('/api/turnir-zacet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        turnirId: params.id,
+        turnirIme: turnir.ime,
+        turnirDatum: turnir.datum,
+        turnirLokacija: turnir.lokacija,
+      })
+    })
+
     nalozi()
   }
 
