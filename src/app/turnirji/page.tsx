@@ -24,17 +24,32 @@ export default function Turnirji() {
 
     const { data: t } = await supabase
       .from('turnirji')
-      .select('*, created_by_profil:created_by(*), prijave:turnir_prijave(count)')
+      .select('*')
       .order('datum', { ascending: true })
-    setTurnirji(t || [])
+
+    // Za vsak turnir naloži prijave
+    if (t) {
+      const turnirjiZPrijavami = await Promise.all(t.map(async (turnir) => {
+        const { data: pr } = await supabase
+          .from('turnir_prijave')
+          .select('*, igralec_id')
+          .eq('turnir_id', turnir.id)
+        return { ...turnir, prijave: pr || [] }
+      }))
+      setTurnirji(turnirjiZPrijavami)
+    }
     setLoading(false)
   }
 
   const prijaviSe = async (turnirId: string) => {
-    await supabase.from('turnir_prijave').insert({
+    const { error } = await supabase.from('turnir_prijave').insert({
       turnir_id: turnirId,
       igralec_id: profil.id
     })
+    if (error) {
+      console.error('Napaka:', error)
+      return
+    }
     nalozi()
   }
 
