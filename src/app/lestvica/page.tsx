@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Avatar from '@/components/Avatar'
 
 const LIGE = [
   { id: 'starter', ime: 'Starter Liga', emoji: '🌱', barva: 'text-gray-400', border: 'border-gray-600', bg: 'bg-gray-900/20', aktivna: 'bg-gray-700/30' },
@@ -149,9 +150,7 @@ export default function Lestvica() {
 
                   {/* Ime */}
                   <div className="col-span-5 flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-black border ${jeMoj ? `${liga.border} ${liga.bg}` : 'border-blue-800/30 bg-blue-900/20'}`}>
-                      {ig.ime?.[0]}{ig.priimek?.[0]}
-                    </div>
+                    <Avatar profil={ig} velikost="sm" />
                     <div>
                       <div className={`font-bold text-sm ${jeMoj ? 'text-white' : 'text-blue-100/80'}`}>
                         {ig.ime} {ig.priimek}

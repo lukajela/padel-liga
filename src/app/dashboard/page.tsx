@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Avatar from '@/components/Avatar'
 
 const LIGA_BARVE: Record<string, string> = {
   starter: 'text-gray-400 border-gray-600',
@@ -102,7 +103,10 @@ export default function Dashboard() {
           <div className={`border px-3 py-1 rounded-full text-xs font-bold uppercase ${LIGA_BARVE[profil.liga]}`}>
             {profil.liga}
           </div>
-          <span className="text-blue-300/70">{profil.ime} {profil.priimek}</span>
+          <div className="flex items-center gap-2">
+            <Avatar profil={profil} velikost="sm" />
+            <span className="text-blue-300/70">{profil.ime} {profil.priimek}</span>
+          </div>
           <Link href="/chat" className="relative text-blue-300/60 hover:text-blue-300 transition-colors ml-2">
             💬
             {neprebranih > 0 && (

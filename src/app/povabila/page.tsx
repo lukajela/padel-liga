@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Avatar from '@/components/Avatar'
 
 export default function Povabila() {
   const [profil, setProfil] = useState<any>(null)
@@ -269,9 +270,7 @@ export default function Povabila() {
             ) : prejeta.map(p => (
               <div key={p.id} className="bg-[#051525] border border-blue-800/30 rounded-2xl p-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-black">
-                    {p.povabitelj?.ime?.[0]}{p.povabitelj?.priimek?.[0]}
-                  </div>
+                  <Avatar profil={p.povabitelj} velikost="lg" />
                   <div className="flex-1">
                     <div className="font-black text-lg">{p.povabitelj?.ime} {p.povabitelj?.priimek}</div>
                     <div className="text-blue-400/50 text-sm">te izziva na tekmo!</div>
@@ -306,9 +305,7 @@ export default function Povabila() {
             ) : poslana.map(p => (
               <div key={p.id} className="bg-[#051525] border border-blue-800/30 rounded-2xl p-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-black">
-                    {p.povabljenec?.ime?.[0]}{p.povabljenec?.priimek?.[0]}
-                  </div>
+                  <Avatar profil={p.povabljenec} velikost="lg" />
                   <div className="flex-1">
                     <div className="font-black">{p.povabljenec?.ime} {p.povabljenec?.priimek}</div>
                     <div className="text-yellow-400/70 text-sm">⏳ Čaka na odgovor</div>
@@ -334,9 +331,7 @@ export default function Povabila() {
               return (
                 <div key={p.id} className="bg-[#051525] border border-green-800/30 rounded-2xl p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-green-600/20 border border-green-500/40 flex items-center justify-center font-black">
-                      {nasprotnik?.ime?.[0]}{nasprotnik?.priimek?.[0]}
-                    </div>
+                    <Avatar profil={nasprotnik} velikost="lg" />
                     <div className="flex-1">
                       <div className="font-black">{nasprotnik?.ime} {nasprotnik?.priimek}</div>
                       <div className="text-green-400/70 text-sm">✅ Tekma sprejeta!</div>

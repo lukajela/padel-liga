@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Avatar from '@/components/Avatar'
 
 const IGRISCA_LISTA = [
   'Ludus Beach Park, Ljubljana',
@@ -168,7 +169,7 @@ export default function IskanjeTekcme() {
         <div className={`rounded-2xl p-6 mb-8 border transition-all duration-500 ${iscem ? 'bg-blue-900/20 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.15)]' : 'bg-[#051525] border-blue-800/30'}`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-blue-600/20 border-2 border-blue-500/50 flex items-center justify-center text-2xl">👤</div>
+              <Avatar profil={mojProfil} velikost="xl" />
               <div>
                 <div className="font-black text-lg">{mojProfil?.ime} {mojProfil?.priimek}</div>
                 <div className={`text-sm capitalize flex items-center gap-1 ${LIGA_BARVA[mojProfil?.liga]?.split(' ')[0]}`}>
@@ -253,9 +254,7 @@ export default function IskanjeTekcme() {
                   <div key={n.id}
                     className="bg-[#051525] border border-blue-800/30 hover:border-blue-500/50 rounded-2xl p-5 transition-all hover:shadow-[0_4px_20px_rgba(59,130,246,0.1)] group">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-600/20 border-2 border-blue-500/40 flex items-center justify-center font-black text-lg">
-                        {n.ime?.[0]}{n.priimek?.[0]}
-                      </div>
+                      <Avatar profil={n} velikost="lg" />
                       <div className="flex-1">
                         <div className="font-black text-base group-hover:text-blue-300 transition-colors">
                           {n.ime} {n.priimek}

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Avatar from '@/components/Avatar'
 import { Suspense } from 'react'
 
 function ChatVsebina() {
@@ -204,9 +205,7 @@ function ChatVsebina() {
               <button key={p.id} onClick={() => odpriPogovor(p)}
                 className={`w-full flex items-center gap-3 p-4 border-b border-blue-800/10 hover:bg-blue-900/20 transition-all text-left ${aktivniPogovor?.id === p.id ? 'bg-blue-900/30' : ''}`}>
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-black text-sm flex-shrink-0">
-                    {p.ime?.[0]}{p.priimek?.[0]}
-                  </div>
+                  <Avatar profil={p} velikost="md" />
                   {p.neprebrana > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-black">
                       {p.neprebrana}
@@ -237,9 +236,7 @@ function ChatVsebina() {
             {/* Header */}
             <div className="flex items-center gap-3 p-4 border-b border-blue-800/30">
               <button onClick={() => setAktivniPogovor(null)} className="md:hidden text-blue-400 mr-1">←</button>
-              <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-black text-sm">
-                {aktivniPogovor.ime?.[0]}{aktivniPogovor.priimek?.[0]}
-              </div>
+              <Avatar profil={aktivniPogovor} velikost="md" />
               <div>
                 <div className="font-black">{aktivniPogovor.ime} {aktivniPogovor.priimek}</div>
                 <div className="text-blue-400/40 text-xs capitalize">{aktivniPogovor.liga} Liga</div>
