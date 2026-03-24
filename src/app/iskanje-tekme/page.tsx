@@ -30,7 +30,27 @@ export default function IskanjeTekcme() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/register'); return }
       const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      if (data) setMojProfil(data)
+      if (data) {
+        setMojProfil(data)
+
+        // Preveri ali je timeout potekel
+        if (data.isci_tekmo && data.isci_tekmo_cas) {
+          const dveUri = new Date(Date.now() - 2 * 60 * 60 * 1000)
+          const casOnline = new Date(data.isci_tekmo_cas)
+          if (casOnline < dveUri) {
+            // Timeout potekel – izklopi
+            await supabase.from('profiles').update({
+              isci_tekmo: false,
+              isci_tekmo_cas: null
+            }).eq('id', user.id)
+            setIscem(false)
+          } else {
+            setIscem(data.isci_tekmo)
+          }
+        } else {
+          setIscem(data.isci_tekmo || false)
+        }
+      }
       setLoading(false)
     }
     nalozi()
@@ -38,10 +58,19 @@ export default function IskanjeTekcme() {
 
   const isciNasprotnike = async () => {
     if (!mojProfil) return
+
+    // Avtomatsko izklopi tiste ki so online več kot 2h
+    const dveUri = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+    await supabase.from('profiles')
+      .update({ isci_tekmo: false, isci_tekmo_cas: null })
+      .eq('isci_tekmo', true)
+      .lt('isci_tekmo_cas', dveUri)
+
     const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('liga', mojProfil.liga)
+      .eq('isci_tekmo', true)
       .neq('id', mojProfil.id)
       .limit(10)
     setNasprotniki(data || [])
@@ -52,9 +81,15 @@ export default function IskanjeTekcme() {
     setIscem(nov)
     if (nov) {
       await isciNasprotnike()
-      await supabase.from('profiles').update({ isci_tekmo: true }).eq('id', mojProfil.id)
+      await supabase.from('profiles').update({
+        isci_tekmo: true,
+        isci_tekmo_cas: new Date().toISOString()
+      }).eq('id', mojProfil.id)
     } else {
-      await supabase.from('profiles').update({ isci_tekmo: false }).eq('id', mojProfil.id)
+      await supabase.from('profiles').update({
+        isci_tekmo: false,
+        isci_tekmo_cas: null
+      }).eq('id', mojProfil.id)
       setNasprotniki([])
     }
   }
