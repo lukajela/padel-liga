@@ -53,12 +53,12 @@ export default function Profil() {
         setUsername(data.username || '')
       }
       // Naloži ekipo
-      const { data: ekipa } = await supabase
+      const { data: ekipaData } = await supabase
         .from('ekipe')
         .select('*')
         .or(`igralec1_id.eq.${user.id},igralec2_id.eq.${user.id}`)
-        .single()
-      if (ekipa) setMojaEkipa(ekipa)
+        .maybeSingle()
+      if (ekipaData) setMojaEkipa(ekipaData)
 
       const { data: zn } = await supabase
         .from('znacke')
