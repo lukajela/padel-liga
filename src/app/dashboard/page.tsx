@@ -138,13 +138,14 @@ export default function Dashboard() {
         </div>
 
         {/* Navigacija */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           {[
             {href:'/iskanje-tekme', icon:'🔍', title:'Išči Tekmo', opis:'Najdi nasprotnika'},
             {href:'/povabila', icon:'📬', title:'Povabila', opis:'Sprejmi izzive'},
             {href:'/lestvica', icon:'🏆', title:'Lestvica', opis:'Poglej rang listo'},
             {href:'/tekma', icon:'⚔️', title:'Začni Tekmo', opis:'Vnesi rezultat'},
             {href:'/igrisca', icon:'📍', title:'Igrišča', opis:'Padel centri v SLO'},
+            {href:'/turnirji', icon:'🏆', title:'Turnirji', opis:'Tekmuj v turnirjih'},
           ].map(({href, icon, title, opis}) => (
             <Link key={href} href={href}
               className="relative bg-[#051525] border border-blue-800/30 hover:border-blue-600/50 rounded-2xl p-6 text-center transition-all hover:bg-blue-900/20 group">
