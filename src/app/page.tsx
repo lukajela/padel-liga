@@ -50,6 +50,16 @@ export default function Home() {
           ))}
         </div>
       </div>
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-blue-800/30 mt-20 py-8 text-center">
+        <div className="flex items-center justify-center gap-6 text-blue-400/30 text-sm">
+          <Link href="/pogoji" className="hover:text-blue-400 transition-colors">Pogoji uporabe</Link>
+          <span>·</span>
+          <Link href="/zasebnost" className="hover:text-blue-400 transition-colors">Zasebnost</Link>
+          <span>·</span>
+          <span>© 2026 Slovenian Padel League</span>
+        </div>
+      </footer>
     </main>
   )
 }
