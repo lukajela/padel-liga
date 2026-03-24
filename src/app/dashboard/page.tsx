@@ -146,6 +146,7 @@ export default function Dashboard() {
             {href:'/tekma', icon:'⚔️', title:'Začni Tekmo', opis:'Vnesi rezultat'},
             {href:'/igrisca', icon:'📍', title:'Igrišča', opis:'Padel centri v SLO'},
             {href:'/turnirji', icon:'🏆', title:'Turnirji', opis:'Tekmuj v turnirjih'},
+            {href:'/chat', icon:'💬', title:'Sporočila', opis:'Klepetaj z igralci'},
           ].map(({href, icon, title, opis}) => (
             <Link key={href} href={href}
               className="relative bg-[#051525] border border-blue-800/30 hover:border-blue-600/50 rounded-2xl p-6 text-center transition-all hover:bg-blue-900/20 group">

@@ -299,6 +299,10 @@ export default function IskanjeTekcme() {
                         {posiljam === n.id ? '📧 Pošiljam...' : '⚔️ Povabi na tekmo'}
                       </button>
                     )}
+                    <Link href={`/chat?z=${n.id}`}
+                      className="w-full border border-blue-700/50 text-blue-300 hover:bg-blue-900/20 py-3 rounded-xl font-bold text-sm transition-all text-center mt-2 block">
+                      💬 Pošlji sporočilo
+                    </Link>
                   </div>
                 ))}
               </div>
