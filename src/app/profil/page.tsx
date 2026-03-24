@@ -98,6 +98,8 @@ export default function Profil() {
       const { data: { publicUrl } } = supabase.storage.from('avatarji').getPublicUrl(filePath)
       await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
       setProfil({ ...profil, avatar_url: publicUrl })
+    } else {
+      console.error('Upload error:', error)
     }
 
     setUploadingAvatar(false)
