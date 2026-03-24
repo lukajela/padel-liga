@@ -71,6 +71,8 @@ export default function IskanjeTekcme() {
           liga: mojProfil.liga,
           igrisca: izbIgrisca,
           termin: termin,
+          povabiteljaId: mojProfil.id,
+          povabljenecId: nasprotnik.id,
         })
       })
       setPoslanoPovabilo(nasprotnik.id)

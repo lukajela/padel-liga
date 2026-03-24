@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(req: Request) {
   const { email1, email2, ime1, ime2, rezultat, zmagovalec } = await req.json()
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
                 <p style="color:#93c5fd;text-align:center;font-size:18px;">
                   🥇 Zmagovalec: <strong style="color:white;">${zmagovalec}</strong>
                 </p>
-                <a href="https://padel-liga-bay.vercel.app/lestvica" 
+                <a href="https://padel-liga-bay.vercel.app/lestvica"
                   style="display:block;background:#2563eb;color:white;text-align:center;padding:16px;border-radius:12px;text-decoration:none;font-weight:bold;margin-top:24px;">
                   🏆 Poglej lestvico
                 </a>

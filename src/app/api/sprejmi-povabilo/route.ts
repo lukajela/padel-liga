@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(req: Request) {
   const { povabiloId, emailPovabitelja, imePovabljeneca } = await req.json()
 
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   try {
-    await fetch('https://api.brevo.com/v3/smtp/email', {
+    // Posodobi status v bazi
+    await supabase.from('povabila').update({ status: 'sprejeto' }).eq('id', povabiloId)
+
+    // Pošlji email povabitelju
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +36,7 @@ export async function POST(req: Request) {
                 <p style="color:#93c5fd;font-size:18px;margin:0 0 24px;">
                   <strong style="color:white;">${imePovabljeneca}</strong> je sprejel tvoj izziv! Čas je za tekmo! 🎾
                 </p>
-                <a href="https://padel-liga-bay.vercel.app/povabila" 
+                <a href="https://padel-liga-bay.vercel.app/povabila"
                   style="display:block;background:#2563eb;color:white;text-align:center;padding:16px;border-radius:12px;text-decoration:none;font-weight:bold;">
                   🎾 Pojdi na povabila
                 </a>
@@ -35,8 +45,16 @@ export async function POST(req: Request) {
           </body>`
       })
     })
+
+    if (!response.ok) {
+      const err = await response.json()
+      console.error('Brevo error:', err)
+      return NextResponse.json({ error: 'Napaka' }, { status: 500 })
+    }
+
     return NextResponse.json({ ok: true })
   } catch (error) {
+    console.error(error)
     return NextResponse.json({ error: 'Napaka' }, { status: 500 })
   }
 }
