@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [profil, setProfil] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [novaPovabila, setNovaPovabila] = useState(0)
+  const [neprebranih, setNeprebranih] = useState(0)
   const router = useRouter()
   const supabase = createClient()
 
@@ -43,9 +44,37 @@ export default function Dashboard() {
         .eq('status', 'caka')
       setNovaPovabila(count || 0)
 
+      // Preveri neprebrana sporočila
+      const { count: countSporocil } = await supabase
+        .from('sporocila')
+        .select('*', { count: 'exact', head: true })
+        .eq('prejemnik_id', user.id)
+        .eq('prebrano', false)
+      setNeprebranih(countSporocil || 0)
+
       setLoading(false)
     }
     nalozi()
+
+    // Real-time za nova sporočila
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const channel = supabase
+        .channel('dashboard-sporocila')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sporocila',
+          filter: `prejemnik_id=eq.${user.id}`
+        }, () => {
+          setNeprebranih(prev => prev + 1)
+        })
+        .subscribe()
+      return () => { supabase.removeChannel(channel) }
+    }
+    const cleanup = getUser()
+    return () => { cleanup.then(fn => fn?.()) }
   }, [])
 
   if (loading) return (
@@ -74,6 +103,14 @@ export default function Dashboard() {
             {profil.liga}
           </div>
           <span className="text-blue-300/70">{profil.ime} {profil.priimek}</span>
+          <Link href="/chat" className="relative text-blue-300/60 hover:text-blue-300 transition-colors ml-2">
+            💬
+            {neprebranih > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-black">
+                {neprebranih}
+              </span>
+            )}
+          </Link>
           <Link href="/profil" className="text-blue-300/60 hover:text-blue-300 transition-colors ml-2">
             👤 Profil
           </Link>
@@ -146,7 +183,7 @@ export default function Dashboard() {
             {href:'/tekma', icon:'⚔️', title:'Začni Tekmo', opis:'Vnesi rezultat'},
             {href:'/igrisca', icon:'📍', title:'Igrišča', opis:'Padel centri v SLO'},
             {href:'/turnirji', icon:'🏆', title:'Turnirji', opis:'Tekmuj v turnirjih'},
-            {href:'/chat', icon:'💬', title:'Sporočila', opis:'Klepetaj z igralci'},
+            {href:'/chat', icon:'💬', title:`Sporočila${neprebranih > 0 ? ` (${neprebranih})` : ''}`, opis:'Klepetaj z igralci'},
           ].map(({href, icon, title, opis}) => (
             <Link key={href} href={href}
               className="relative bg-[#051525] border border-blue-800/30 hover:border-blue-600/50 rounded-2xl p-6 text-center transition-all hover:bg-blue-900/20 group">
@@ -156,6 +193,11 @@ export default function Dashboard() {
               {href === '/povabila' && novaPovabila > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">
                   {novaPovabila}
+                </span>
+              )}
+              {href === '/chat' && neprebranih > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">
+                  {neprebranih}
                 </span>
               )}
             </Link>
